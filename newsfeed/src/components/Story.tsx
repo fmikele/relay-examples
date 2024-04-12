@@ -15,14 +15,11 @@ const StoryFragment = graphql`
     title
     summary
     createdAt
-    poster {
-      name
-      profilePicture {
-        url
-      }
+    poster{
+      ...PosterBylineFragment
     }
     thumbnail {
-      url
+      ...ImageFragment @arguments(width: 400)
     }
   }
 `;
@@ -30,7 +27,6 @@ const StoryFragment = graphql`
 type Props = {
   story: StoryFragment$key;
 };
-
 
 export default function Story({story}: Props) {
   const data = useFragment(
@@ -42,7 +38,7 @@ export default function Story({story}: Props) {
       <Heading>{data.title}</Heading>
       <PosterByline poster={data.poster} />
       <Timestamp time={data.createdAt} />
-      <Image image={data.image} />
+      <Image image={data.thumbnail} width={400} height={400} />
       <StorySummary summary={data.summary} />
     </Card>
   );

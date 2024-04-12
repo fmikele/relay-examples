@@ -4,12 +4,17 @@ import { graphql } from "relay-runtime";
 import Image from "./Image";
 import Timestamp from "./Timestamp";
 
+import {usePreloadedQuery} from 'react-relay';
+import type {PreloadedQuery} from 'react-relay';
+
 import type { PosterDetailsHovercardContentsQuery as QueryType } from "./__generated__/PosterDetailsHovercardContentsQuery.graphql";
 import type { PosterDetailsHovercardContentsBodyFragment$key } from "./__generated__/PosterDetailsHovercardContentsBodyFragment.graphql";
+import OrganizationKind from "./OrganizationKind";
+
 
 export const PosterDetailsHovercardContentsQuery = graphql`
-  query PosterDetailsHovercardContentsQuery {
-    node(id: "1") {
+  query PosterDetailsHovercardContentsQuery( $posterID: ID! ) {
+    node(id: $posterID) {
       ... on Actor {
         ...PosterDetailsHovercardContentsBodyFragment
       }
@@ -17,10 +22,26 @@ export const PosterDetailsHovercardContentsQuery = graphql`
   }
 `;
 
-export default function PosterDetailsHovercardContents({}: {}): React.ReactElement {
-  const data = useLazyLoadQuery<QueryType>(
+
+// Versione useLazyLoadQuery
+// export default function PosterDetailsHovercardContents({posterID}: {posterID: string;}): React.ReactElement {
+//   const data = useLazyLoadQuery<QueryType>(
+//     PosterDetailsHovercardContentsQuery,
+//     {posterID}
+//   );
+//   return (
+//     <div className="posterHovercard">
+//       <PosterDetailsHovercardContentsBody poster={data.node} />
+//     </div>
+//   );
+// }
+
+
+//Versione PreloadedQuery 
+export default function PosterDetailsHovercardContents({queryRef}: {queryRef: PreloadedQuery<QueryType>}): React.ReactElement {
+  const data = usePreloadedQuery(
     PosterDetailsHovercardContentsQuery,
-    {}
+    queryRef,
   );
   return (
     <div className="posterHovercard">
@@ -28,6 +49,7 @@ export default function PosterDetailsHovercardContents({}: {}): React.ReactEleme
     </div>
   );
 }
+
 
 const PosterDetailsHovercardContentsBodyFragment = graphql`
   fragment PosterDetailsHovercardContentsBodyFragment on Actor {
@@ -37,6 +59,17 @@ const PosterDetailsHovercardContentsBodyFragment = graphql`
     profilePicture {
       ...ImageFragment
     }
+    ... on Organization {
+      organizationKind
+    }
+    ... on Person {
+      location {
+        name
+    }
+  }
+
+
+
   }
 `;
 
@@ -59,6 +92,12 @@ function PosterDetailsHovercardContentsBody({
         <li>
           Joined <Timestamp time={data.joined} />
         </li>
+        {data.location != null && (
+           <li>{data.location.name}</li>
+         )}
+        {data.organizationKind != null && (
+          <li><OrganizationKind kind={data.organizationKind} /></li>
+         )}
       </ul>
       <div className="posterHovercard__buttons">
         <button>Friend</button>
